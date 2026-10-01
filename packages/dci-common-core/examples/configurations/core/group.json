@@ -1,0 +1,35 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/core/v1.0.0",
+  "sender_id": "mis.country-x.gov",
+  "receiver_id": "registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "Group",
+  "mapping": {
+    "group_identifier": {
+      "identifier_type": "=HHID",
+      "identifier_value": "household_id"
+    },
+    "group_type": "unit_type",
+    "address": {
+      "locality": "village",
+      "region_code": "region",
+      "country_code": "country"
+    },
+    "group_size": "num_members",
+    "group_head_info": {
+      "member_identifier": { "identifier_value": "head_id" },
+      "demographic_info": {
+        "name": {
+          "given_name": "head_first_name",
+          "surname": "head_last_name"
+        },
+        "sex": "head_gender"
+      }
+    }
+  },
+  "codeLists": {
+    "group_head_info": {
+      "demographic_info": { "sex": { "M": "male", "F": "female" } }
+    }
+  }
+}

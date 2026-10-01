@@ -1,0 +1,20 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/dr/v1.0.0",
+  "sender_id": "mis.country-x.gov",
+  "receiver_id": "dr.registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "DisabilitySupport",
+  "mapping": {
+    "human_assistance": {
+      "type": "assistanceType",
+      "frequency": "assistanceFrequency",
+      "support_status": "supportStatus",
+      "caregiver": {
+        "id": "caregiverId",
+        "name": "caregiverName",
+        "identifier": "caregiverIdentifier"
+      },
+      "relationship": "caregiverRelationship"
+    }
+  }
+}

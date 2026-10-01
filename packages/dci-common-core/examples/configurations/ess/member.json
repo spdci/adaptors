@@ -1,0 +1,23 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/ess/v1.0.0",
+  "sender_id": "mis.country-x.gov",
+  "receiver_id": "ess.registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "Member",
+  "mapping": {
+    "member_identifier": {
+      "identifier_type": "=UIN",
+      "identifier_value": "member_id"
+    },
+    "demographic_info": {
+      "name": { "given_name": "first_name", "surname": "last_name" },
+      "sex": "gender"
+    },
+    "employment_status": "employment_code",
+    "occupation": "job_title"
+  },
+  "codeLists": {
+    "demographic_info": { "sex": { "M": "male", "F": "female" } },
+    "employment_status": { "E": "employed", "U": "unemployed" }
+  }
+}

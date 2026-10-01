@@ -1,0 +1,34 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/ews/v1.0.0",
+  "sender_id": "ews.country-x.gov",
+  "receiver_id": "ews.registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "AlertFeature",
+  "mapping": {
+    "id": "alertId",
+    "geometry": { "type": "geometryType" },
+    "properties": {
+      "capAlert": {
+        "identifier": "alertId",
+        "sender": "senderOrg",
+        "sent": "sentAt",
+        "status": "statusCode",
+        "msgType": "msgTypeCode",
+        "source": "sourceSystem",
+        "scope": "scopeCode",
+        "info": {
+          "language": "language",
+          "event": "eventType",
+          "urgency": "urgencyCode",
+          "severity": "severityCode",
+          "certainty": "certaintyCode",
+          "headline": "headlineText",
+          "description": "descriptionText",
+          "instruction": "instructionText",
+          "effective": "effectiveAt",
+          "expires": "expiresAt"
+        }
+      }
+    }
+  }
+}

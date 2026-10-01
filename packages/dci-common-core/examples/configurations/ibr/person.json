@@ -1,0 +1,23 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/ibr/v1.0.0",
+  "sender_id": "mis.country-x.gov",
+  "receiver_id": "ibr.registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "IBRPerson",
+  "mapping": {
+    "identifier": { "identifier_type": "=UIN", "identifier_value": "nid" },
+    "name": { "given_name": "firstName", "surname": "lastName" },
+    "sex": "gender",
+    "birth_date": "dob",
+    "marital_status": "maritalCode",
+    "poverty_score": "povertyScore",
+    "is_disabled": "isDisabled",
+    "household_identifier": "householdId",
+    "programme_name": "programmeName",
+    "programme_identifier": "programmeId",
+    "enrolment_status": "enrolmentStatus",
+    "benefit_type": "benefitType",
+    "benefit_value": "benefitValue",
+    "payment_status": "paymentStatus"
+  }
+}

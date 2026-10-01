@@ -1,0 +1,31 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/crvs/v1.0.0",
+  "sender_id": "mis.country-x.gov",
+  "receiver_id": "crvs.registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "CRVSPerson",
+  "mapping": {
+    "identifier": { "identifier_type": "=UIN", "identifier_value": "nationalId" },
+    "name": { "surname": "lastName", "given_name": "firstName" },
+    "sex": "gender",
+    "birth_date": "dob",
+    "address": {
+      "address_line1": "addressLine1",
+      "address_line2": "addressLine2",
+      "locality": "city",
+      "country_code": "country"
+    },
+    "marital_status": "maritalCode",
+    "parent1_identifier": {
+      "identifier_type": "=UIN",
+      "identifier_value": "parent1Id"
+    },
+    "parent2_identifier": {
+      "identifier_type": "=UIN",
+      "identifier_value": "parent2Id"
+    }
+  },
+  "codeLists": {
+    "sex": { "M": "male", "F": "female" }
+  }
+}

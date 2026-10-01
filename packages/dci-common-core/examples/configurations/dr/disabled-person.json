@@ -1,0 +1,15 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/dr/v1.0.0",
+  "sender_id": "mis.country-x.gov",
+  "receiver_id": "dr.registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "DisabledPerson",
+  "mapping": {
+    "disability_details": {
+      "impairment_type": "impairmentType",
+      "impairment_level": "impairmentLevel",
+      "impairment_cause": "impairmentCause",
+      "age_on_set": "ageOnSet"
+    }
+  }
+}
