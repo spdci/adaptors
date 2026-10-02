@@ -1,0 +1,24 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/core/v1.0.0",
+  "sender_id": "mis.country-x.gov",
+  "receiver_id": "registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "Person",
+  "mapping": {
+    "identifier": {
+      "identifier_type": "=NationalID",
+      "identifier_value": "citizen_id"
+    },
+    "name": { "given_name": "firstName", "surname": "lastName" },
+    "sex": "gender",
+    "birth_date": {
+      "source": "dob",
+      "sourceFormat": "DD/MM/YYYY",
+      "targetFormat": "YYYY-MM-DDTHH:mm:ss"
+    },
+    "phone_number": "mobile"
+  },
+  "codeLists": {
+    "sex": { "M": "male", "F": "female" }
+  }
+}

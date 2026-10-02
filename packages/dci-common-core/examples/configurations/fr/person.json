@@ -1,0 +1,30 @@
+{
+  "baseUrl": "https://sandbox.spdci.org/fr/v1.0.0",
+  "sender_id": "mis.country-x.gov",
+  "receiver_id": "fr.registry.country-x.gov",
+  "authentication": { "type": "bearer", "token": "REPLACE_ME" },
+  "schema": "FRPerson",
+  "mapping": {
+    "famer_personal_details": {
+      "member_identifier": {
+        "identifier_type": "=NationalID",
+        "identifier_value": "farmerId"
+      },
+      "demographic_info": {
+        "identifier": {
+          "identifier_type": "=NationalID",
+          "identifier_value": "farmerId"
+        },
+        "name": { "first_name": "firstName", "last_name": "lastName" },
+        "date_of_birth": "dob",
+        "gender": "sexCode"
+      }
+    },
+    "family_details": {
+      "group_type": "householdType",
+      "poverty_score": "povertyScore",
+      "poverty_score_type": "povertyScoreType",
+      "group_size": "householdSize"
+    }
+  }
+}

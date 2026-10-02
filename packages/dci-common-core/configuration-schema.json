@@ -1,0 +1,646 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DCI Common Core Adaptor Configuration",
+  "description": "Configuration for calling a DCI-compliant registry's Core interoperability API (Search, Event Subscription, Request Status Check), and/or for mapping local data into a Core data object (Person, Member, Group) with toDCI/fromDCI.",
+  "type": "object",
+  "required": [
+    "baseUrl",
+    "sender_id",
+    "receiver_id"
+  ],
+  "properties": {
+
+    "baseUrl": {
+      "title": "Registry Base URL",
+      "type": "string",
+      "format": "uri",
+      "description": "Base URL of the DCI registry, e.g. https://sandbox.spdci.org/namespace/v1.0.0",
+      "examples": [
+        "https://sandbox.spdci.org/namespace/v1.0.0"
+      ]
+    },
+
+    "sender_id": {
+      "title": "Sender ID",
+      "type": "string",
+      "description": "sender_id registered with the receiving registry. Used to populate the DCI message header (see MsgHeader_V1.0.0)."
+    },
+
+    "receiver_id": {
+      "title": "Receiver ID",
+      "type": "string",
+      "description": "receiver_id registered with the calling system. Used to populate the DCI message header."
+    },
+
+    "sender_uri": {
+      "title": "Sender Callback URI",
+      "type": "string",
+      "format": "uri",
+      "description": "Optional callback URI for async on-* responses (e.g. on-search)."
+    },
+
+    "authentication": {
+      "title": "Authentication",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "basic",
+            "bearer",
+            "apiKey"
+          ]
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string",
+          "writeOnly": true
+        },
+        "token": {
+          "type": "string",
+          "writeOnly": true
+        }
+      }
+    },
+
+    "schema": {
+      "title": "DCI Target Schema",
+      "type": "string",
+      "description": "The DCI data object to map local data into/out of with toDCI()/fromDCI(). Only required if you use those functions. Person/Member/Group are the shared Core objects (also used by the Social and ESS interfaces). The rest are interface-specific: CRVSPerson [crvs], DisabledPerson/DisabilityInfo/DisabilitySupport [dr], IBRPerson/Beneficiary [ibr], FRPerson [fr], AlertFeature [ews].",
+      "enum": [
+        "Person",
+        "Member",
+        "Group",
+        "CRVSPerson",
+        "DisabledPerson",
+        "DisabilityInfo",
+        "DisabilitySupport",
+        "IBRPerson",
+        "Beneficiary",
+        "FRPerson",
+        "AlertFeature"
+      ],
+      "examples": [
+        "Person"
+      ]
+    },
+
+    "mapping": {
+      "title": "DCI Object Mapping",
+      "description": "Maps local fields to the DCI schema named in `schema`. Shape depends on the value of `schema` (see the conditional rules below).",
+      "type": "object"
+    },
+
+    "codeLists": {
+      "title": "Code List Transformations",
+      "description": "Maps local values to DCI controlled vocabularies. Keys should match `mapping` field names, e.g. sex, identifier_type, marital_status, employment_status, occupation, income_level, education_level, language_code, group_type.",
+      "type": "object",
+      "examples": [
+        {
+          "sex": {
+            "M": "male",
+            "F": "female"
+          }
+        }
+      ]
+    }
+
+  },
+
+  "additionalProperties": false,
+
+  "definitions": {
+
+    "identifierMapping": {
+      "type": "object",
+      "description": "See schemas/core/v1/data/Identifier.jsonld. Only a single, primary identifier is supported.",
+      "properties": {
+        "identifier_type": {
+          "type": "string",
+          "description": "Source field or constant value (prefix with '=' for a constant)."
+        },
+        "identifier_value": {
+          "type": "string"
+        }
+      }
+    },
+
+    "dateMapping": {
+      "description": "See schemas/core/v1/data/DateTime.jsonld. A plain string (source field name, or '=constant') works when the value is already in the target format — use the object form only when it needs reformatting.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "description": "Source field containing the date."
+            },
+            "sourceFormat": {
+              "type": "string",
+              "description": "Format used by the source system, e.g. DD/MM/YYYY."
+            },
+            "targetFormat": {
+              "type": "string",
+              "default": "YYYY-MM-DDTHH:mm:ss",
+              "description": "DCI ISO 8601 date-time format."
+            }
+          }
+        }
+      ]
+    },
+
+    "nameMapping": {
+      "type": "object",
+      "description": "See schemas/core/v1/data/Name.jsonld.",
+      "properties": {
+        "surname": { "type": "string" },
+        "given_name": { "type": "string" },
+        "second_name": { "type": "string" },
+        "maiden_name": { "type": "string" },
+        "prefix": { "type": "string" },
+        "suffix": { "type": "string" }
+      }
+    },
+
+    "addressMapping": {
+      "type": "object",
+      "description": "See schemas/core/v1/data/Address.jsonld.",
+      "properties": {
+        "address_line_1": { "type": "string" },
+        "address_line_2": { "type": "string" },
+        "locality": { "type": "string" },
+        "sub_region_code": { "type": "string" },
+        "region_code": { "type": "string" },
+        "postal_code": { "type": "string" },
+        "country_code": { "type": "string" }
+      }
+    },
+
+    "personMapping": {
+      "type": "object",
+      "description": "See schemas/core/v1/data/Person.jsonld. Lists (e.g. multiple identifiers/addresses) are not supported — only a single value per field.",
+      "properties": {
+        "identifier": { "$ref": "#/definitions/identifierMapping" },
+        "name": { "$ref": "#/definitions/nameMapping" },
+        "sex": { "type": "string" },
+        "birth_date": { "$ref": "#/definitions/dateMapping" },
+        "death_date": { "$ref": "#/definitions/dateMapping" },
+        "address": { "$ref": "#/definitions/addressMapping" },
+        "phone_number": { "type": "string" },
+        "email": { "type": "string" },
+        "registration_date": { "$ref": "#/definitions/dateMapping" },
+        "last_updated": { "$ref": "#/definitions/dateMapping" }
+      }
+    },
+
+    "memberMapping": {
+      "type": "object",
+      "description": "See schemas/core/v1/data/Member.jsonld. related_person/disability_info lists are not supported.",
+      "properties": {
+        "member_identifier": { "$ref": "#/definitions/identifierMapping" },
+        "demographic_info": { "$ref": "#/definitions/personMapping" },
+        "is_disabled": { "type": "string" },
+        "marital_status": { "type": "string" },
+        "employment_status": { "type": "string" },
+        "occupation": { "type": "string" },
+        "income_level": { "type": "string" },
+        "language_code": { "type": "string" },
+        "education_level": { "type": "string" },
+        "registration_date": { "$ref": "#/definitions/dateMapping" },
+        "last_updated": { "$ref": "#/definitions/dateMapping" }
+      }
+    },
+
+    "groupMapping": {
+      "type": "object",
+      "description": "See schemas/core/v1/data/Group.jsonld. member_list (array of Member) is not supported.",
+      "properties": {
+        "group_identifier": { "$ref": "#/definitions/identifierMapping" },
+        "group_type": { "type": "string" },
+        "geographical_location": { "type": "string" },
+        "address": { "$ref": "#/definitions/addressMapping" },
+        "place_address": { "type": "string" },
+        "poverty_score": { "type": "string" },
+        "poverty_score_type": { "type": "string" },
+        "group_head_info": { "$ref": "#/definitions/memberMapping" },
+        "group_size": { "type": "string" },
+        "registration_date": { "$ref": "#/definitions/dateMapping" },
+        "last_updated": { "$ref": "#/definitions/dateMapping" }
+      }
+    },
+
+    "drNameMapping": {
+      "type": "object",
+      "description": "Name shape used by the dr/fr extensions' example data — 'first_name'/'last_name', not Core's 'given_name'/'surname'. See extensions/dr/DisabledPerson.yaml and extensions/fr/FRPerson.yaml.",
+      "properties": {
+        "first_name": { "type": "string" },
+        "last_name": { "type": "string" }
+      }
+    },
+
+    "placeMapping": {
+      "type": "object",
+      "description": "Simplified Place shape for crvs's birth_place/death_place. See extensions/dci/Person.yaml. contains_place (list) is not supported.",
+      "properties": {
+        "name": { "type": "string" },
+        "address_line": { "type": "string" },
+        "geo": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "string" },
+            "longitude": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "crvsAddressMapping": {
+      "type": "object",
+      "description": "crvs's own address shape differs from Core's addressMapping: 'address_line1'/'address_line2' (no underscore before the digit). See extensions/dci/Person.yaml. geo_location/plus_code is not supported.",
+      "properties": {
+        "address_line1": { "type": "string" },
+        "address_line2": { "type": "string" },
+        "locality": { "type": "string" },
+        "sub_region_code": { "type": "string" },
+        "region_code": { "type": "string" },
+        "postal_code": { "type": "string" },
+        "country_code": { "type": "string" }
+      }
+    },
+
+    "crvsPersonMapping": {
+      "type": "object",
+      "description": "CRVS interface [crvs]. Modeled on extensions/dci/Person.yaml, which is what crvs's SearchResponse actually references (extensions/crvs/Person.yaml is unused in the spec). identifier/phone_number/email/contains_place lists are not supported — only a single value per field.",
+      "properties": {
+        "identifier": { "$ref": "#/definitions/identifierMapping" },
+        "name": { "$ref": "#/definitions/nameMapping" },
+        "phone_number": { "type": "string" },
+        "email": { "type": "string" },
+        "sex": { "type": "string" },
+        "birth_date": { "$ref": "#/definitions/dateMapping" },
+        "birth_place": { "$ref": "#/definitions/placeMapping" },
+        "death_date": { "$ref": "#/definitions/dateMapping" },
+        "death_place": { "$ref": "#/definitions/placeMapping" },
+        "address": { "$ref": "#/definitions/crvsAddressMapping" },
+        "marital_status": { "type": "string" },
+        "marriage_date": { "$ref": "#/definitions/dateMapping" },
+        "divorce_date": { "$ref": "#/definitions/dateMapping" },
+        "parent1_identifier": { "$ref": "#/definitions/identifierMapping" },
+        "parent2_identifier": { "$ref": "#/definitions/identifierMapping" }
+      }
+    },
+
+    "disabledPersonMapping": {
+      "type": "object",
+      "description": "DR interface [dr], DisabledPerson object — see extensions/dr/DisabledPerson.yaml. Its only field is a list of impairments; this maps a single representative entry (build the array manually in job code for multiple impairments).",
+      "properties": {
+        "disability_details": {
+          "type": "object",
+          "properties": {
+            "impairment_type": { "type": "string" },
+            "impairment_level": { "type": "string" },
+            "impairment_cause": { "type": "string" },
+            "age_on_set": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "disabilityInfoMapping": {
+      "type": "object",
+      "description": "DR interface [dr], DisabilityInfo object (/registry/sync/get-disability-details response) — see extensions/dr/DisabilityInfo.yaml. disability_details/disability_support/programs_enrollments lists are not supported.",
+      "properties": {
+        "personal_details": {
+          "type": "object",
+          "properties": {
+            "identifier": { "type": "string" },
+            "name": { "$ref": "#/definitions/drNameMapping" },
+            "date_of_birth": { "$ref": "#/definitions/dateMapping" },
+            "gender": { "type": "string" }
+          }
+        },
+        "disability_status": { "type": "string" },
+        "disability_level": { "type": "string" },
+        "transport_requirement": { "type": "string" },
+        "housing_type": { "type": "string" },
+        "registration_date": { "$ref": "#/definitions/dateMapping" },
+        "last_updated": { "$ref": "#/definitions/dateMapping" }
+      }
+    },
+
+    "disabilitySupportMapping": {
+      "type": "object",
+      "description": "DR interface [dr], DisabilitySupport object (/registry/sync/get-disability-support response) — see extensions/dr/DisabilitySupport.yaml. Its real shape is a `disabilities` list; this maps a single representative entry. assistive_technology/housing_support/medical_care/animal_assistance lists are not supported.",
+      "properties": {
+        "human_assistance": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "frequency": { "type": "string" },
+            "support_status": { "type": "string" },
+            "caregiver": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "identifier": { "type": "string" }
+              }
+            },
+            "relationship": { "type": "string" },
+            "registration_date": { "$ref": "#/definitions/dateMapping" },
+            "last_updated": { "$ref": "#/definitions/dateMapping" }
+          }
+        },
+        "registration_date": { "$ref": "#/definitions/dateMapping" },
+        "last_updated": { "$ref": "#/definitions/dateMapping" }
+      }
+    },
+
+    "ibrPersonMapping": {
+      "type": "object",
+      "description": "IBR interface [ibr], Person object — see extensions/ibr/Person.yaml. A flat, denormalized shape (benefit/payment/enrollment fields live directly on the person, not nested).",
+      "properties": {
+        "identifier": { "$ref": "#/definitions/identifierMapping" },
+        "name": { "$ref": "#/definitions/nameMapping" },
+        "household_status": { "type": "string" },
+        "benefiting_entity": { "type": "string" },
+        "sex": { "type": "string" },
+        "birth_date": { "$ref": "#/definitions/dateMapping" },
+        "sub_region_code": { "type": "string" },
+        "marital_status": { "type": "string" },
+        "poverty_score": { "type": "string" },
+        "is_disabled": { "type": "string" },
+        "household_identifier": { "type": "string" },
+        "programme_name": { "type": "string" },
+        "programme_identifier": { "type": "string" },
+        "registration_date": { "$ref": "#/definitions/dateMapping" },
+        "enrolment_date": { "$ref": "#/definitions/dateMapping" },
+        "suspension_date": { "$ref": "#/definitions/dateMapping" },
+        "graduation_date": { "$ref": "#/definitions/dateMapping" },
+        "enrolment_status": { "type": "string" },
+        "benefit_type": { "type": "string" },
+        "benefit_date": { "$ref": "#/definitions/dateMapping" },
+        "benefit_value": { "type": "string" },
+        "payroll_date": { "$ref": "#/definitions/dateMapping" },
+        "payroll_amount": { "type": "string" },
+        "payment_credit_date": { "$ref": "#/definitions/dateMapping" },
+        "payment_credit_amount": { "type": "string" },
+        "payment_charges": { "type": "string" },
+        "payment_status": { "type": "string" }
+      }
+    },
+
+    "beneficiaryMapping": {
+      "type": "object",
+      "description": "IBR interface [ibr], Beneficiary object — see extensions/ibr/Beneficiary.yaml. member_identifier is a plain string in this object (unlike identifierMapping elsewhere). related_person/disability_info are not supported.",
+      "properties": {
+        "assistance_unit": { "type": "string" },
+        "member": {
+          "type": "object",
+          "properties": {
+            "member_identifier": { "type": "string" },
+            "demographic_info": {
+              "type": "object",
+              "properties": {
+                "person": {
+                  "type": "object",
+                  "properties": {
+                    "identifier_type": { "type": "string" },
+                    "identifier_value": { "type": "string" },
+                    "name": { "$ref": "#/definitions/nameMapping" },
+                    "sex": { "type": "string" },
+                    "birth_date": { "$ref": "#/definitions/dateMapping" },
+                    "death_date": { "$ref": "#/definitions/dateMapping" },
+                    "address": { "type": "string" },
+                    "phone_number": { "type": "string" },
+                    "email": { "type": "string" }
+                  }
+                }
+              }
+            },
+            "relationship_head": { "type": "string" },
+            "marital_status": { "type": "string" },
+            "employment_status": { "type": "string" },
+            "occupation": { "type": "string" },
+            "income_level": { "type": "string" },
+            "language_code": { "type": "string" },
+            "education_level": { "type": "string" },
+            "registration_date": { "$ref": "#/definitions/dateMapping" },
+            "programme_identifier": {
+              "type": "object",
+              "properties": {
+                "programme": {
+                  "type": "object",
+                  "properties": {
+                    "programme_identifier": { "type": "string" },
+                    "programme_name": { "type": "string" }
+                  }
+                },
+                "enrolment_date": { "$ref": "#/definitions/dateMapping" },
+                "enrolment_status": { "type": "string" },
+                "status_change_date": { "$ref": "#/definitions/dateMapping" },
+                "benefits": {
+                  "type": "object",
+                  "properties": {
+                    "benefit_type": { "type": "string" },
+                    "benefit_date": { "$ref": "#/definitions/dateMapping" },
+                    "benefit_value": { "type": "string" },
+                    "benefit_frequency": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "frPersonMapping": {
+      "type": "object",
+      "description": "FR (Farmer Registry) interface [fr], FRPerson object — see extensions/fr/FRPerson.yaml (note: 'famer_personal_details' is the literal spec spelling, not a typo introduced here). group_identifier/group_head_info/member_list/farm_details/machineries_details lists are not supported — map those manually in job code.",
+      "properties": {
+        "famer_personal_details": {
+          "type": "object",
+          "properties": {
+            "member_identifier": { "$ref": "#/definitions/identifierMapping" },
+            "demographic_info": {
+              "type": "object",
+              "properties": {
+                "identifier": { "$ref": "#/definitions/identifierMapping" },
+                "name": { "$ref": "#/definitions/drNameMapping" },
+                "date_of_birth": { "$ref": "#/definitions/dateMapping" },
+                "gender": { "type": "string" }
+              }
+            }
+          }
+        },
+        "family_details": {
+          "type": "object",
+          "properties": {
+            "group_type": { "type": "string" },
+            "poverty_score": { "type": "string" },
+            "poverty_score_type": { "type": "string" },
+            "group_size": { "type": "string" },
+            "registration_date": { "$ref": "#/definitions/dateMapping" },
+            "last_updated": { "$ref": "#/definitions/dateMapping" }
+          }
+        }
+      }
+    },
+
+    "capAlertInfoMapping": {
+      "type": "object",
+      "description": "Single representative CAP alert-info entry — CapAlert.info is really a list (multiple languages/updates); build the array manually for more than one. See extensions/ews/CapAlertInfo.yaml. category/responseType/area lists are not supported.",
+      "properties": {
+        "language": { "type": "string" },
+        "event": { "type": "string" },
+        "urgency": { "type": "string" },
+        "severity": { "type": "string" },
+        "certainty": { "type": "string" },
+        "headline": { "type": "string" },
+        "description": { "type": "string" },
+        "instruction": { "type": "string" },
+        "effective": { "$ref": "#/definitions/dateMapping" },
+        "expires": { "$ref": "#/definitions/dateMapping" }
+      }
+    },
+
+    "alertFeatureMapping": {
+      "type": "object",
+      "description": "EWS interface [ews], AlertFeature object (CAP 1.2 alert embedded in a GeoJSON Feature) — see extensions/ews/AlertFeature.yaml. geometry.coordinates and info are not supported as lists (info maps one representative entry, see capAlertInfoMapping).",
+      "properties": {
+        "id": { "type": "string" },
+        "geometry": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" }
+          }
+        },
+        "properties": {
+          "type": "object",
+          "properties": {
+            "capAlert": {
+              "type": "object",
+              "properties": {
+                "identifier": { "type": "string" },
+                "sender": { "type": "string" },
+                "sent": { "$ref": "#/definitions/dateMapping" },
+                "status": { "type": "string" },
+                "msgType": { "type": "string" },
+                "source": { "type": "string" },
+                "scope": { "type": "string" },
+                "info": { "$ref": "#/definitions/capAlertInfoMapping" }
+              }
+            }
+          }
+        }
+      }
+    }
+
+  },
+
+  "allOf": [
+    {
+      "if": {
+        "properties": { "schema": { "const": "Person" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/personMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "Member" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/memberMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "Group" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/groupMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "CRVSPerson" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/crvsPersonMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "DisabledPerson" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/disabledPersonMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "DisabilityInfo" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/disabilityInfoMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "DisabilitySupport" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/disabilitySupportMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "IBRPerson" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/ibrPersonMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "Beneficiary" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/beneficiaryMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "FRPerson" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/frPersonMapping" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schema": { "const": "AlertFeature" } },
+        "required": [ "schema" ]
+      },
+      "then": {
+        "properties": { "mapping": { "$ref": "#/definitions/alertFeatureMapping" } }
+      }
+    }
+  ]
+}
