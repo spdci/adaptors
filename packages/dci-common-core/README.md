@@ -46,6 +46,10 @@ supply the `message` payload described by each operation's DCI request
 schema (`SearchRequest`, `SubscribeRequest`, `UnSubscribeRequest`,
 `TxnStatusRequest`).
 
+**Implementing this for a country?** Start with the
+[Implementation guide](./IMPLEMENTATION_GUIDE.md) — a step-by-step walkthrough
+from choosing interfaces to go-live checklist.
+
 ## Where does `data` come from?
 
 This adaptor implements **only the DCI registry side**. It does not connect
